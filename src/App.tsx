@@ -31,6 +31,7 @@ interface ChartData {
 
 function App() {
   const [ticker, setTicker] = useState<Ticker | null>(null)
+  const [previousPrice, setPreviousPrice] = useState<number>(0)
   const [indicators, setIndicators] = useState<Indicator | null>(null)
   const [chartData, setChartData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(false)
@@ -48,13 +49,26 @@ function App() {
     try {
       const response = await fetch(`http://localhost:8000/api/market/ticker?symbol=${symbol}`)
       const data = await response.json()
+      if (ticker) {
+        setPreviousPrice(ticker.price)
+      }
       setTicker(data)
     } catch (error) {
       console.error('Error fetching ticker:', error)
     }
   }
 
-  // 获取技术指标
+  // 计算价格变化百分比
+  const getPriceChange = () => {
+    if (!ticker || !previousPrice) return { value: 0, percent: 0 }
+    const change = ticker.price - previousPrice
+    const percent = (change / previousPrice) * 100
+    return { value: change, percent }
+  }
+
+  const priceChange = getPriceChange()
+
+  // ... 其他函数保持不变 ...
   const fetchIndicators = async () => {
     setLoading(true)
     try {
@@ -72,86 +86,55 @@ function App() {
     }
   }
 
-  // 获取新闻数据（模拟数据，后续可以接入真实API）
   const fetchNews = async () => {
-    // 模拟新闻数据
     const mockNews: NewsItem[] = [
       {
         id: '1',
-        timestamp: Date.now() - 3600000 * 24, // 1天前
-        title: '比特币突破重要阻力位',
-        content: '比特币价格突破关键阻力位 $65,000，交易量显著增加，市场情绪乐观。技术分析显示可能继续上涨至 $70,000。',
+        timestamp: Date.now() - 3600000 * 2,
+        title: '比特币突破关键阻力位 $70,000',
+        content: '在强劲的买盘支撑下，比特币价格突破关键阻力位，市场情绪转为乐观。',
         sentiment: 'positive',
         source: 'CoinDesk',
-        tags: ['BTC', '突破', '技术分析']
+        tags: ['BTC', '突破']
       },
       {
         id: '2',
-        timestamp: Date.now() - 3600000 * 12, // 12小时前
-        title: 'SEC 推迟比特币 ETF 决定',
-        content: '美国证券交易委员会再次推迟对现货比特币 ETF 的决定，市场短期承压。分析师认为这是正常流程。',
-        sentiment: 'negative',
+        timestamp: Date.now() - 3600000 * 6,
+        title: '美联储维持利率不变',
+        content: 'FOMC 会议决定维持当前利率水平，加密市场获得短期支撑。',
+        sentiment: 'neutral',
         source: 'Bloomberg',
-        tags: ['监管', 'ETF', 'SEC']
+        tags: ['宏观', '利率']
       },
       {
         id: '3',
-        timestamp: Date.now() - 3600000 * 6, // 6小时前
-        title: '主要交易所公布储备金证明',
-        content: '多家主要加密货币交易所发布储备金证明报告，提高透明度，增强用户信心。',
-        sentiment: 'neutral',
-        source: 'CoinTelegraph',
-        tags: ['交易所', '透明度']
-      },
-      {
-        id: '4',
-        timestamp: Date.now() - 3600000 * 2, // 2小时前
-        title: '机构投资者持续增持比特币',
-        content: 'Grayscale 和 MicroStrategy 等机构投资者继续增持比特币，显示长期看好态度。链上数据显示大额转账增加。',
+        timestamp: Date.now() - 3600000 * 12,
+        title: '大型机构增持比特币',
+        content: '链上数据显示，大型机构持续增持比特币，市场信心增强。',
         sentiment: 'positive',
-        source: 'The Block',
-        tags: ['机构', '链上数据', '增持']
-      },
-      {
-        id: '5',
-        timestamp: Date.now() - 3600000 * 48, // 2天前
-        title: '以太坊网络升级成功完成',
-        content: '以太坊成功完成最新网络升级，Gas 费用降低 30%，交易速度提升，DeFi 生态受益。',
-        sentiment: 'positive',
-        source: 'Ethereum Foundation',
-        tags: ['ETH', '升级', 'DeFi']
+        source: 'CryptoQuant',
+        tags: ['机构', '链上数据']
       }
     ]
     setNews(mockNews)
   }
 
-  // 处理新闻点击
-  const handleNewsClick = (newsItem: NewsItem) => {
-    setSelectedNewsId(newsItem.id === selectedNewsId ? undefined : newsItem.id)
+  const handleNewsClick = (newsId: string) => {
+    setSelectedNewsId(newsId === selectedNewsId ? undefined : newsId)
   }
 
-  // 处理预警触发
   const handleAlertTriggered = (alert: PriceAlert) => {
     setTriggeredAlert(alert)
-
-    // 5秒后自动消失
-    setTimeout(() => {
-      setTriggeredAlert(null)
-    }, 10000)
   }
 
-  // 关闭预警通知
   const dismissAlert = () => {
     setTriggeredAlert(null)
   }
 
-  // 查看预警详情
   const viewAlertDetails = () => {
     setTriggeredAlert(null)
-    // 可以滚动到预警面板或高亮预警项
   }
 
-  // 获取图表数据
   const fetchChartData = async () => {
     try {
       const response = await fetch('http://localhost:8000/api/data/query', {
@@ -166,10 +149,8 @@ function App() {
       })
       const result = await response.json()
       if (result.data && result.data.length > 0) {
-        // 反转数据（从旧到新）并计算移动平均线
         const sortedData = result.data.reverse()
         setChartData(sortedData.map((item: any, index: number) => {
-          // 简单计算SMA
           let sma_20, sma_50
           if (index >= 19) {
             const sum20 = sortedData.slice(index - 19, index + 1).reduce((acc: number, d: any) => acc + d.close, 0)
@@ -192,7 +173,6 @@ function App() {
     }
   }
 
-  // 同步历史数据
   const syncData = async () => {
     setLoading(true)
     try {
@@ -218,7 +198,6 @@ function App() {
     }
   }
 
-  // 运行回测
   const runBacktest = async (strategy: string) => {
     setLoading(true)
     try {
@@ -259,12 +238,10 @@ function App() {
     fetchNews()
     loadBotConfigs()
 
-    // 每10秒更新一次价格
     const interval = setInterval(fetchTicker, 10000)
     return () => clearInterval(interval)
   }, [symbol])
 
-  // 加载机器人配置
   const loadBotConfigs = () => {
     const saved = localStorage.getItem('botConfigs')
     if (saved) {
@@ -276,22 +253,17 @@ function App() {
     }
   }
 
-  // 保存机器人配置
   const saveBotConfigs = (configs: BotConfig[]) => {
     setBotConfigs(configs)
     localStorage.setItem('botConfigs', JSON.stringify(configs))
   }
 
-  // 处理 AI 动作执行
   const handleAIAction = async (action: any) => {
     switch (action.type) {
       case 'create_strategy':
-        // 这里实现创建策略的逻辑
         console.log('Creating strategy:', action.data)
         return { success: true, message: '策略已创建' }
-
       case 'run_backtest':
-        // 运行回测
         try {
           const response = await fetch('http://localhost:8000/api/backtest/run', {
             method: 'POST',
@@ -307,22 +279,15 @@ function App() {
         } catch (error) {
           return { success: false, error: '回测失败' }
         }
-
       case 'set_alert':
-        // 设置预警（这里需要集成到 AlertPanel）
         console.log('Setting alert:', action.data)
         return { success: true, message: '预警已设置' }
-
       case 'analyze_market':
-        // 市场分析
         console.log('Analyzing market:', action.data)
         return { success: true, message: '分析完成' }
-
       case 'optimize_strategy':
-        // 优化策略
         console.log('Optimizing strategy:', action.data)
         return { success: true, message: '优化完成' }
-
       default:
         return { success: false, error: '未知动作' }
     }
@@ -330,33 +295,34 @@ function App() {
 
   return (
     <div className="app">
+      {/* 现代化 Header */}
       <header className="header">
-        <h1>📈 量化交易系统</h1>
+        <h1>量化交易系统</h1>
         <div className="header-controls">
           <div className="tab-nav">
             <button
               className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveTab('dashboard')}
             >
-              📊 仪表盘
+              Dashboard
             </button>
             <button
               className={`tab-btn ${activeTab === 'editor' ? 'active' : ''}`}
               onClick={() => setActiveTab('editor')}
             >
-              📝 策略编辑器
+              Strategy
             </button>
             <button
               className="tab-btn"
               onClick={() => setShowBotSettings(true)}
             >
-              🤖 机器人
+              Bots
             </button>
             <button
               className="tab-btn"
               onClick={() => setShowAIAssistant(true)}
             >
-              🧠 AI助手
+              AI
             </button>
           </div>
           {activeTab === 'dashboard' && (
@@ -372,143 +338,126 @@ function App() {
       </header>
 
       {activeTab === 'dashboard' ? (
-        <main className="main-content dashboard-layout">
-        {/* 左侧：图表和指标 */}
-        <div className="main-column">
-          {/* 价格图表 */}
-          {chartData.length > 0 && (
-            <section className="card chart-card">
-              <PriceChart
-                data={chartData}
+        <main className="main-content">
+          {/* 图表区域 */}
+          <div className="chart-section">
+            {/* 价格统计卡片组 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div className="stat-card">
+                <div className="stat-label">Current Price</div>
+                <div className="stat-value">
+                  ${ticker?.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                </div>
+                <div className={`stat-change ${priceChange.percent >= 0 ? 'positive' : 'negative'}`}>
+                  {priceChange.percent >= 0 ? '↗' : '↘'} {Math.abs(priceChange.percent).toFixed(2)}%
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-label">24h Volume</div>
+                <div className="stat-value" style={{ fontSize: '1.5rem' }}>
+                  {ticker?.volume.toLocaleString() || '0'}
+                </div>
+                <div className="stat-change positive">
+                  ↗ High Activity
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-label">RSI</div>
+                <div className="stat-value" style={{ fontSize: '1.75rem' }}>
+                  {indicators?.rsi?.toFixed(1) || 'N/A'}
+                </div>
+                <div className={`stat-change ${indicators?.rsi && indicators.rsi < 30 ? 'positive' : indicators?.rsi && indicators.rsi > 70 ? 'negative' : ''}`}>
+                  {indicators?.rsi && indicators.rsi < 30 ? 'Oversold' : indicators?.rsi && indicators.rsi > 70 ? 'Overbought' : 'Neutral'}
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-label">MACD</div>
+                <div className="stat-value" style={{ fontSize: '1.75rem' }}>
+                  {indicators?.macd?.toFixed(2) || 'N/A'}
+                </div>
+                <div className={`stat-change ${indicators?.macd && indicators.macd > 0 ? 'positive' : 'negative'}`}>
+                  {indicators?.macd && indicators.macd > 0 ? '↗ Bullish' : '↘ Bearish'}
+                </div>
+              </div>
+            </div>
+
+            {/* 价格图表 */}
+            {chartData.length > 0 && (
+              <div className="glass-card" style={{ marginBottom: '2rem' }}>
+                <div className="card-header">
+                  <h2 className="card-title">Price Chart</h2>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button onClick={fetchChartData} disabled={loading} className="btn btn-ghost btn-sm">
+                      🔄 Refresh
+                    </button>
+                    <button onClick={syncData} disabled={loading} className="btn btn-primary btn-sm">
+                      📥 Sync Data
+                    </button>
+                  </div>
+                </div>
+                <PriceChart
+                  data={chartData}
+                  symbol={symbol}
+                  news={news}
+                  onNewsClick={handleNewsClick}
+                  selectedNewsId={selectedNewsId}
+                />
+              </div>
+            )}
+
+            {/* 快速操作 */}
+            <div className="glass-card">
+              <div className="card-header">
+                <h2 className="card-title">Quick Actions</h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <button onClick={() => runBacktest('simple_ma')} disabled={loading} className="btn btn-success">
+                  📈 MA Strategy Backtest
+                </button>
+                <button onClick={() => runBacktest('rsi')} disabled={loading} className="btn btn-success">
+                  📊 RSI Strategy Backtest
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 侧边栏 */}
+          <div className="side-panel">
+            {/* 价格预警 */}
+            <div className="glass-card">
+              <AlertPanel
                 symbol={symbol}
+                currentPrice={ticker?.price || 0}
+                onAlertTriggered={handleAlertTriggered}
+                botConfigs={botConfigs}
+              />
+            </div>
+
+            {/* 新闻面板 */}
+            <div className="glass-card">
+              <NewsPanel
                 news={news}
                 onNewsClick={handleNewsClick}
                 selectedNewsId={selectedNewsId}
               />
-            </section>
-          )}
-
-        {/* 实时价格卡片 */}
-        <section className="card price-card">
-          <h2>实时价格</h2>
-          {ticker ? (
-            <div className="price-info">
-              <div className="price-large">${ticker.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-              <div className="price-detail">
-                <span>交易量: {ticker.volume.toLocaleString()}</span>
-                <span className="timestamp">
-                  {new Date(ticker.timestamp).toLocaleTimeString()}
-                </span>
-              </div>
             </div>
-          ) : (
-            <div className="loading">加载中...</div>
-          )}
-        </section>
-
-        {/* 技术指标卡片 */}
-        <section className="card indicators-card">
-          <h2>技术指标</h2>
-          {loading && <div className="loading">计算中...</div>}
-          {indicators && !loading ? (
-            <div className="indicators-grid">
-              <div className="indicator">
-                <span className="label">RSI</span>
-                <span className={`value ${indicators.rsi && indicators.rsi < 30 ? 'oversold' : indicators.rsi && indicators.rsi > 70 ? 'overbought' : ''}`}>
-                  {indicators.rsi?.toFixed(2) || 'N/A'}
-                </span>
-              </div>
-              <div className="indicator">
-                <span className="label">MACD</span>
-                <span className="value">{indicators.macd?.toFixed(2) || 'N/A'}</span>
-              </div>
-              <div className="indicator">
-                <span className="label">SMA(20)</span>
-                <span className="value">${indicators.sma_20?.toFixed(2) || 'N/A'}</span>
-              </div>
-              <div className="indicator">
-                <span className="label">SMA(50)</span>
-                <span className="value">${indicators.sma_50?.toFixed(2) || 'N/A'}</span>
-              </div>
-            </div>
-          ) : !loading && (
-            <div className="no-data">
-              <p>暂无数据，请先同步历史数据</p>
-            </div>
-          )}
-        </section>
-
-        {/* 操作按钮区 */}
-        <section className="card actions-card">
-          <h2>操作</h2>
-          <div className="actions-grid">
-            <button onClick={syncData} disabled={loading} className="btn btn-primary">
-              📥 同步数据
-            </button>
-            <button onClick={fetchIndicators} disabled={loading} className="btn btn-secondary">
-              🔄 刷新指标
-            </button>
-            <button onClick={() => runBacktest('simple_ma')} disabled={loading} className="btn btn-success">
-              🎯 MA策略回测
-            </button>
-            <button onClick={() => runBacktest('rsi')} disabled={loading} className="btn btn-success">
-              📊 RSI策略回测
-            </button>
           </div>
-        </section>
-
-          {/* 系统状态 */}
-          <section className="card status-card">
-            <h2>系统状态</h2>
-            <div className="status-grid">
-              <div className="status-item">
-                <span className="status-dot online"></span>
-                <span>Python引擎: 运行中</span>
-              </div>
-              <div className="status-item">
-                <span className="status-dot online"></span>
-                <span>数据库: 已连接</span>
-              </div>
-              <div className="status-item">
-                <span className="status-dot"></span>
-                <span>AI分析: 就绪</span>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* 右侧：新闻和预警面板 */}
-        <aside className="side-column">
-          <section className="card alert-card">
-            <AlertPanel
-              symbol={symbol}
-              currentPrice={ticker?.price || 0}
-              onAlertTriggered={handleAlertTriggered}
-              botConfigs={botConfigs}
-            />
-          </section>
-          <section className="card news-card">
-            <NewsPanel
-              news={news}
-              onNewsClick={handleNewsClick}
-              selectedNewsId={selectedNewsId}
-            />
-          </section>
-        </aside>
-      </main>
+        </main>
       ) : (
-        <main className="main-content editor-view">
-          <div className="card editor-card">
+        <main className="main-content" style={{ gridTemplateColumns: '1fr', padding: '2rem 5rem' }}>
+          <div className="glass-card">
+            <div className="card-header">
+              <h2 className="card-title">Strategy Editor</h2>
+            </div>
             <StrategyEditor />
           </div>
         </main>
       )}
 
-      <footer className="footer">
-        <p>量化交易系统 v0.1.0 | Powered by Claude Code</p>
-      </footer>
-
-      {/* 预警通知弹窗 */}
+      {/* 预警通知 */}
       {triggeredAlert && (
         <AlertNotification
           alert={triggeredAlert}
@@ -520,16 +469,14 @@ function App() {
       {/* 机器人设置模态框 */}
       {showBotSettings && (
         <div className="modal-overlay" onClick={() => setShowBotSettings(false)}>
-          <div className="modal-content bot-settings-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>🤖 机器人通知设置</h2>
-              <button className="btn-close-modal" onClick={() => setShowBotSettings(false)}>
+          <div className="glass-card" style={{ maxWidth: '800px', width: '90%', maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div className="card-header" style={{ position: 'sticky', top: 0, background: 'var(--glass-bg)', backdropFilter: 'blur(20px)', zIndex: 10 }}>
+              <h2 className="card-title">Bot Notifications</h2>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowBotSettings(false)}>
                 ×
               </button>
             </div>
-            <div className="modal-body-wrapper">
-              <BotSettings onSave={saveBotConfigs} />
-            </div>
+            <BotSettings onSave={saveBotConfigs} />
           </div>
         </div>
       )}
@@ -537,14 +484,14 @@ function App() {
       {/* AI 助手模态框 */}
       {showAIAssistant && (
         <div className="modal-overlay" onClick={() => setShowAIAssistant(false)}>
-          <div className="modal-content ai-assistant-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>🧠 AI 交易助手</h2>
-              <button className="btn-close-modal" onClick={() => setShowAIAssistant(false)}>
+          <div className="glass-card" style={{ maxWidth: '700px', width: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div className="card-header" style={{ flexShrink: 0 }}>
+              <h2 className="card-title">AI Trading Assistant</h2>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowAIAssistant(false)}>
                 ×
               </button>
             </div>
-            <div className="modal-body-wrapper ai-body">
+            <div style={{ flex: 1, overflow: 'hidden' }}>
               <AIAssistant
                 symbol={symbol}
                 currentPrice={ticker?.price || 0}
