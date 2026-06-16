@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { PriceChart } from './components/PriceChart'
 import { StrategyEditor } from './components/StrategyEditor'
+import { NewsPanel, type NewsItem } from './components/NewsPanel'
 
 interface Ticker {
   symbol: string
@@ -32,6 +33,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [symbol, setSymbol] = useState('BTC/USDT')
   const [activeTab, setActiveTab] = useState<'dashboard' | 'editor'>('dashboard')
+  const [news, setNews] = useState<NewsItem[]>([])
+  const [selectedNewsId, setSelectedNewsId] = useState<string | undefined>()
 
   // 获取实时价格
   const fetchTicker = async () => {
@@ -60,6 +63,64 @@ function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 获取新闻数据（模拟数据，后续可以接入真实API）
+  const fetchNews = async () => {
+    // 模拟新闻数据
+    const mockNews: NewsItem[] = [
+      {
+        id: '1',
+        timestamp: Date.now() - 3600000 * 24, // 1天前
+        title: '比特币突破重要阻力位',
+        content: '比特币价格突破关键阻力位 $65,000，交易量显著增加，市场情绪乐观。技术分析显示可能继续上涨至 $70,000。',
+        sentiment: 'positive',
+        source: 'CoinDesk',
+        tags: ['BTC', '突破', '技术分析']
+      },
+      {
+        id: '2',
+        timestamp: Date.now() - 3600000 * 12, // 12小时前
+        title: 'SEC 推迟比特币 ETF 决定',
+        content: '美国证券交易委员会再次推迟对现货比特币 ETF 的决定，市场短期承压。分析师认为这是正常流程。',
+        sentiment: 'negative',
+        source: 'Bloomberg',
+        tags: ['监管', 'ETF', 'SEC']
+      },
+      {
+        id: '3',
+        timestamp: Date.now() - 3600000 * 6, // 6小时前
+        title: '主要交易所公布储备金证明',
+        content: '多家主要加密货币交易所发布储备金证明报告，提高透明度，增强用户信心。',
+        sentiment: 'neutral',
+        source: 'CoinTelegraph',
+        tags: ['交易所', '透明度']
+      },
+      {
+        id: '4',
+        timestamp: Date.now() - 3600000 * 2, // 2小时前
+        title: '机构投资者持续增持比特币',
+        content: 'Grayscale 和 MicroStrategy 等机构投资者继续增持比特币，显示长期看好态度。链上数据显示大额转账增加。',
+        sentiment: 'positive',
+        source: 'The Block',
+        tags: ['机构', '链上数据', '增持']
+      },
+      {
+        id: '5',
+        timestamp: Date.now() - 3600000 * 48, // 2天前
+        title: '以太坊网络升级成功完成',
+        content: '以太坊成功完成最新网络升级，Gas 费用降低 30%，交易速度提升，DeFi 生态受益。',
+        sentiment: 'positive',
+        source: 'Ethereum Foundation',
+        tags: ['ETH', '升级', 'DeFi']
+      }
+    ]
+    setNews(mockNews)
+  }
+
+  // 处理新闻点击
+  const handleNewsClick = (newsItem: NewsItem) => {
+    setSelectedNewsId(newsItem.id === selectedNewsId ? undefined : newsItem.id)
   }
 
   // 获取图表数据
@@ -167,6 +228,7 @@ function App() {
     fetchTicker()
     fetchIndicators()
     fetchChartData()
+    fetchNews()
 
     // 每10秒更新一次价格
     const interval = setInterval(fetchTicker, 10000)
@@ -205,13 +267,21 @@ function App() {
       </header>
 
       {activeTab === 'dashboard' ? (
-        <main className="main-content">
-        {/* 价格图表 */}
-        {chartData.length > 0 && (
-          <section className="card chart-card">
-            <PriceChart data={chartData} symbol={symbol} />
-          </section>
-        )}
+        <main className="main-content dashboard-layout">
+        {/* 左侧：图表和指标 */}
+        <div className="main-column">
+          {/* 价格图表 */}
+          {chartData.length > 0 && (
+            <section className="card chart-card">
+              <PriceChart
+                data={chartData}
+                symbol={symbol}
+                news={news}
+                onNewsClick={handleNewsClick}
+                selectedNewsId={selectedNewsId}
+              />
+            </section>
+          )}
 
         {/* 实时价格卡片 */}
         <section className="card price-card">
@@ -282,24 +352,36 @@ function App() {
           </div>
         </section>
 
-        {/* 系统状态 */}
-        <section className="card status-card">
-          <h2>系统状态</h2>
-          <div className="status-grid">
-            <div className="status-item">
-              <span className="status-dot online"></span>
-              <span>Python引擎: 运行中</span>
+          {/* 系统状态 */}
+          <section className="card status-card">
+            <h2>系统状态</h2>
+            <div className="status-grid">
+              <div className="status-item">
+                <span className="status-dot online"></span>
+                <span>Python引擎: 运行中</span>
+              </div>
+              <div className="status-item">
+                <span className="status-dot online"></span>
+                <span>数据库: 已连接</span>
+              </div>
+              <div className="status-item">
+                <span className="status-dot"></span>
+                <span>AI分析: 就绪</span>
+              </div>
             </div>
-            <div className="status-item">
-              <span className="status-dot online"></span>
-              <span>数据库: 已连接</span>
-            </div>
-            <div className="status-item">
-              <span className="status-dot"></span>
-              <span>AI分析: 就绪</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
+
+        {/* 右侧：新闻面板 */}
+        <aside className="news-column">
+          <section className="card news-card">
+            <NewsPanel
+              news={news}
+              onNewsClick={handleNewsClick}
+              selectedNewsId={selectedNewsId}
+            />
+          </section>
+        </aside>
       </main>
       ) : (
         <main className="main-content editor-view">
