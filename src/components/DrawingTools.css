@@ -1,0 +1,349 @@
+/* 画线工具样式 */
+
+.drawing-tools {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 工具栏 */
+.drawing-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.toolbar-section {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.tool-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--foreground);
+}
+
+.tool-btn:hover {
+  background: var(--gray-900);
+  border-color: var(--border);
+}
+
+.tool-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--foreground);
+}
+
+/* 设置面板 */
+.drawing-settings {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  width: 280px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+}
+
+.setting-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.setting-group:last-child {
+  margin-bottom: 0;
+}
+
+.setting-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+/* 颜色选择器 */
+.color-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.color-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.color-btn:hover {
+  transform: scale(1.1);
+}
+
+.color-btn.active {
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--border);
+}
+
+/* 滑块 */
+.setting-group input[type="range"] {
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.setting-group span {
+  font-size: 0.875rem;
+  color: var(--gray-400);
+  margin-left: 0.5rem;
+}
+
+/* 选择框 */
+.setting-group select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--gray-900);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  cursor: pointer;
+  outline: none;
+}
+
+.setting-group select:hover {
+  border-color: var(--border-hover);
+}
+
+.setting-group select:focus {
+  border-color: var(--accent);
+}
+
+/* 绘图画布 */
+.drawing-canvas {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: default;
+  background: transparent;
+}
+
+.drawing-canvas.crosshair {
+  cursor: crosshair;
+}
+
+/* 工具提示 */
+.tool-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  background: var(--gray-800);
+  color: var(--foreground);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 快捷键提示 */
+.toolbar-shortcuts {
+  position: absolute;
+  bottom: var(--spacing-md);
+  left: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  z-index: 5;
+}
+
+.shortcuts-title {
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 0.5rem;
+}
+
+.shortcut-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.shortcut-key {
+  font-family: var(--font-mono);
+  padding: 0.125rem 0.375rem;
+  background: var(--gray-900);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+}
+
+/* 绘图信息提示 */
+.drawing-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: var(--spacing-lg);
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hint-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.hint-text {
+  font-size: 0.875rem;
+  color: var(--gray-400);
+}
+
+/* 绘图列表 */
+.drawings-list {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 240px;
+  max-height: 400px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: var(--shadow-lg);
+}
+
+.drawings-header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.drawing-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.drawing-item:hover {
+  background: var(--gray-900);
+}
+
+.drawing-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.drawing-icon {
+  font-size: 1rem;
+}
+
+.drawing-name {
+  font-size: 0.8125rem;
+  color: var(--foreground);
+}
+
+.drawing-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.drawing-action-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+}
+
+.drawing-action-btn:hover {
+  background: var(--gray-800);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .drawing-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .toolbar-section {
+    flex-wrap: wrap;
+  }
+
+  .drawing-settings,
+  .drawings-list {
+    width: 100%;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .tool-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
+  }
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drawing-settings,
+.drawings-list {
+  animation: fadeIn 200ms ease-out;
+}
