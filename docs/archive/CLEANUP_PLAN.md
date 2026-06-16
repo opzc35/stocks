@@ -1,0 +1,41 @@
+# 文件整理计划
+
+## 要保留的文件
+- README.md (主文档)
+- docs/DOCUMENTATION.md (完整文档，新建)
+
+## 要删除的冗余文件（20个文档合并为1个）
+
+### 功能文档（合并到 DOCUMENTATION.md）
+- ALERT_FEATURE.md
+- AI_ASSISTANT.md
+- AI_QUICK_START.md
+- NEWS_FEATURE.md
+- BOT_NOTIFICATION.md
+- BOT_TWO_WAY_COMMUNICATION.md
+- BOT_TWO_WAY_SUMMARY.md
+
+### 总结文档（合并到 DOCUMENTATION.md）
+- FEATURES_SUMMARY.md
+- COMPLETE_FEATURES.md
+- PROJECT_SUMMARY.md
+- FINAL_SUMMARY.md
+- ALL_FIXES_COMPLETE.md
+
+### CI/CD 文档（合并到 DOCUMENTATION.md）
+- GITHUB_ACTIONS_FIX.md
+- CI_FIX_SUMMARY.md
+- CI_CD_GUIDE.md
+
+### 开发文档（合并到 DOCUMENTATION.md）
+- DEVELOPMENT.md
+- API_EXAMPLES.md
+
+### 重复文档
+- QUICKSTART.md (与 QUICK_START.md 重复)
+- QUICK_START.md (合并到 DOCUMENTATION.md)
+
+## 结果
+20个文档 → 2个文档
+- README.md (项目介绍)
+- docs/DOCUMENTATION.md (完整文档)

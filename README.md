@@ -1,273 +1,133 @@
-# Stocks Trading Client
+# 📊 量化交易系统
 
-一个基于Tauri + React + Python的全平台股票交易客户端。
+一个功能完整、支持 AI 智能交互和社交媒体双向对话的现代化量化交易平台。
 
-## 技术栈
+[![CI/CD](https://github.com/yourusername/stocks/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/yourusername/stocks/actions)
 
-### 前端
-- **Tauri 2** - 桌面应用框架
-- **React 19** - UI框架
-- **TypeScript** - 类型安全
-- **Vite** - 构建工具
+## ✨ 核心功能
 
-### 后端
-- **Rust** - Tauri后端和系统调用
-- **Python FastAPI** - 交易引擎API
-- **CCXT** - 多交易所接口
-- **SQLite** - 本地数据库
+- 📊 **实时行情监控** - 多交易对、K线图表、技术指标
+- 🔔 **智能价格预警** - 突破/跌破预警、多渠道通知
+- 🤖 **社交媒体机器人** - 4平台支持、双向对话
+- 🧠 **AI 交易助手** - 自然语言交互、自动执行
+- 📰 **新闻展示分析** - 情绪分类、图表联动
+- 🎯 **策略回测系统** - 多种策略、详细报告
 
-## 功能特性
-
-- ✅ 多交易所支持（Binance, OKX等）
-- ✅ 实时行情数据
-- ✅ 价格预警系统
-  - 🔔 设置价格突破/跌破预警
-  - 🚨 触发时弹窗通知
-  - 📊 预警状态实时监控
-  - 🔄 支持重置和管理预警
-- ✅ 新闻展示与分析
-  - 📰 新闻面板：实时查看市场新闻
-  - 📍 图表标记：新闻事件直接标注在价格图表上
-  - 🎯 情绪分析：利好/利空/中性新闻分类
-  - 🔍 新闻筛选：按情绪类型快速过滤
-- ✅ K线图表与技术指标
-- ✅ 策略回测引擎
-- 🚧 AI市场分析（Claude集成）
-
-## 新功能：价格预警系统
-
-### 功能说明
-
-价格预警功能帮助你及时捕捉市场机会：
-
-1. **设置预警**
-   - 选择突破(▲)或跌破(▼)条件
-   - 输入目标价格
-   - 一键添加预警
-
-2. **实时监控**
-   - 自动监测当前价格
-   - 达到目标价格时立即触发
-   - 预警状态实时显示
-
-3. **触发通知**
-   - 🚨 右上角弹窗提醒
-   - 📢 提示音通知（浏览器支持时）
-   - 🎯 显示触发价格和时间
-   - 💡 可查看详情或关闭通知
-
-4. **预警管理**
-   - 查看所有预警列表
-   - 已触发预警自动高亮
-   - 支持重置预警继续使用
-   - 一键删除不需要的预警
-
-### 使用场景
-
-- **买入机会**：设置跌破预警，价格下跌到目标位时通知买入
-- **止盈止损**：设置突破预警，价格达到目标后及时卖出
-- **关键位监控**：在重要支撑位/阻力位设置预警
-- **多点位布局**：同时设置多个价格预警，全方位监控市场
-
-## 新功能：社交媒体机器人通知
-
-### 功能说明
-
-将价格预警自动推送到社交平台，随时随地接收通知：
-
-1. **支持平台**
-   - 📱 Telegram：个人使用，全球可访问
-   - 💬 Discord：游戏社区、技术团队
-   - 💼 Slack：企业团队、工作协作
-   - 💚 企业微信：国内企业、移动办公
-
-2. **配置简单**
-   - 点击顶部"🤖 机器人"按钮
-   - 添加并配置机器人
-   - 测试连接确认
-   - 启用后自动推送
-
-3. **消息格式**
-   - 包含交易对、价格、时间
-   - 突破/跌破类型区分
-   - 富文本格式（Discord/Slack）
-
-4. **灵活管理**
-   - 支持多个机器人
-   - 独立开关控制
-   - 编辑和删除配置
-
-### 配置指南
-
-详细的平台配置教程请查看 [BOT_NOTIFICATION.md](./BOT_NOTIFICATION.md)
-
-**快速开始：**
-
-1. 选择平台（推荐 Telegram）
-2. 按照文档获取必要信息（Token、Webhook URL 等）
-3. 在应用中添加机器人配置
-4. 测试连接
-5. 启用机器人
-
-## 新功能：AI 交易助手
-
-### 功能说明
-
-通过自然语言与 AI 对话，完成各种交易任务：
-
-1. **智能对话**
-   - 自然语言交互
-   - 上下文理解
-   - 智能意图识别
-   - 多步骤任务执行
-
-2. **支持操作**
-   - 📈 创建交易策略
-   - 🎯 运行策略回测
-   - 🔔 设置价格预警
-   - 📊 分析市场行情
-   - ⚙️ 优化策略参数
-
-3. **MCP 集成**
-   - create_strategy - 创建策略
-   - run_backtest - 运行回测
-   - set_alert - 设置预警
-   - analyze_market - 市场分析
-   - optimize_strategy - 优化策略
-
-4. **实时反馈**
-   - 动作状态可视化
-   - 执行结果展示
-   - 错误提示和建议
-
-### 使用示例
-
-**对话示例：**
-```
-用户: 帮我创建一个基于移动平均线的策略
-AI: 好的，策略已创建...
-
-用户: 运行回测看看效果
-AI: 回测完成，总收益 +15.6%...
-
-用户: 价格涨到70000时提醒我
-AI: 预警已设置...
-```
-
-### 详细文档
-
-查看完整的 AI 助手使用指南：[AI_ASSISTANT.md](./AI_ASSISTANT.md)
-
-## 新功能：新闻展示
-
-### 功能说明
-
-新增的新闻展示功能让你可以：
-
-1. **新闻总览面板**（右侧）
-   - 实时查看加密货币市场新闻
-   - 按情绪筛选：利好📈、利空📉、中性📰
-   - 点击新闻高亮对应时间点
-
-2. **图表上的新闻标记**（左侧图表）
-   - 新闻事件在价格图表上以彩色圆点标记
-   - 绿色点 = 利好消息
-   - 红色点 = 利空消息
-   - 灰色点 = 中性消息
-   - 点击标记查看新闻详情
-
-3. **交互体验**
-   - 点击新闻项，图表上对应标记会高亮
-   - 点击图表标记，新闻面板会滚动到对应新闻
-   - 响应式布局，适配不同屏幕尺寸
-
-### 如何使用
-
-运行开发服务器后，主界面会自动显示新闻面板：
+## 🚀 快速开始
 
 ```bash
-npm run dev
-```
-
-目前使用的是模拟新闻数据，你可以在 `App.tsx` 的 `fetchNews` 函数中接入真实的新闻 API。
-
-## 项目结构
-
-```
-stocks/
-├── src/                    # React前端源码
-├── src-tauri/              # Rust Tauri后端
-│   ├── src/
-│   │   ├── main.rs         # 主入口
-│   │   ├── commands/       # Tauri命令
-│   │   └── services/       # 服务层
-│   └── Cargo.toml
-├── python-engine/          # Python交易引擎
-│   ├── main.py             # FastAPI应用
-│   ├── api/                # API路由
-│   ├── core/               # 核心功能
-│   └── requirements.txt
-└── data/                   # 数据存储
-```
-
-## 开发环境设置
-
-### 前置要求
-
-- Node.js 18+
-- Rust 1.70+
-- Python 3.12+
-
-### 安装依赖
-
-1. 安装前端依赖：
-```bash
+# 安装依赖
 npm install
+
+# 启动开发服务器
+npm run dev
+
+# 访问应用
+http://localhost:5173/
 ```
 
-2. 创建Python虚拟环境并安装依赖：
+## 📚 完整文档
+
+查看 [完整文档](./docs/DOCUMENTATION.md) 了解：
+- 详细功能说明
+- 配置指南（Telegram/Discord/Slack 机器人）
+- 部署教程
+- 开发文档
+
+## 🎯 主要特性
+
+### 🧠 AI 交易助手
+
+与 AI 对话，自动执行操作：
+```
+你: 帮我创建一个策略
+AI: 策略已创建 ✅
+
+你: 运行回测
+AI: 回测完成，收益 +15.6% ✅
+
+你: 价格涨到70000时提醒我
+AI: 预警已设置 ✅
+```
+
+### 🤖 社交媒体机器人
+
+**单向通知**：价格预警推送到 Telegram/Discord/Slack  
+**双向对话**：在社交平台直接与 AI 交互
+
+支持平台：📱 Telegram | 💬 Discord | 💼 Slack | 💚 企业微信
+
+示例对话：
+```
+你: 分析市场
+机器人: 技术分析：趋势上涨，RSI 62... ✅
+```
+
+### 🔔 价格预警系统
+
+- 设置突破/跌破预警
+- 多渠道通知（浏览器 + 机器人）
+- 实时状态追踪
+- 预警管理
+
+## 🛠️ 技术栈
+
+- **前端**: React 19 + TypeScript + Vite
+- **后端**: Python + FastAPI
+- **桌面**: Tauri 2 + Rust
+- **AI**: MCP 协议集成
+- **CI/CD**: GitHub Actions
+
+## 📦 部署
+
+### Web 应用
 ```bash
-cd python-engine
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+npm run build
 ```
 
-### 启动开发服务器
-
-1. 启动Python交易引擎：
-```bash
-source python-engine/venv/bin/activate
-python python-engine/main.py
-```
-
-2. 启动Tauri开发服务器：
-```bash
-npm run tauri:dev
-```
-
-## API端点
-
-Python FastAPI服务运行在 `http://localhost:8000`
-
-- `GET /health` - 健康检查
-- `GET /api/market/ticker?symbol=BTC/USDT` - 获取ticker数据
-- `GET /api/market/ohlcv?symbol=BTC/USDT&timeframe=1h` - 获取K线数据
-- `POST /api/backtest/run` - 运行策略回测
-- `POST /api/ai/analyze` - AI市场分析
-
-## 构建
-
-构建生产版本：
-
+### 桌面应用
 ```bash
 npm run tauri:build
 ```
 
-## 许可证
+### Docker
+```bash
+docker build -t stocks-trading ./python-engine
+```
 
-ISC
+### 机器人 Webhook（可选）
+```bash
+./deploy_bot_webhook.sh
+```
 
-## 贡献
+## 📸 截图
 
-欢迎提交Issue和Pull Request！
+（TODO: 添加截图）
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+1. Fork 本项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+## 📄 许可证
+
+ISC License
+
+## 📞 支持
+
+- 📖 [完整文档](./docs/DOCUMENTATION.md)
+- 🐛 [提交 Issue](https://github.com/yourusername/stocks/issues)
+- 💬 [Discussions](https://github.com/yourusername/stocks/discussions)
+
+---
+
+**版本**: v2.0.1  
+**更新**: 2026-06-16  
+**作者**: Powered by Claude Code
+
+© 2026 量化交易系统
