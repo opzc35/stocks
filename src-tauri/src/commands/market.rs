@@ -9,6 +9,7 @@ pub struct Ticker {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 pub struct OHLCV {
     pub timestamp: i64,
     pub open: f64,

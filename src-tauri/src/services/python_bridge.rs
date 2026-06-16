@@ -5,6 +5,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 use anyhow::{Result, Context};
 
+#[allow(dead_code)]
 pub struct PythonEngine {
     process: Mutex<Option<Child>>,
     base_url: String,
@@ -112,6 +113,7 @@ impl PythonEngine {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub fn is_running(&self) -> bool {
         let mut process = self.process.lock().unwrap();
 
@@ -124,6 +126,7 @@ impl PythonEngine {
         false
     }
 
+    #[allow(dead_code)]
     pub async fn health_check(&self) -> Result<bool> {
         // 检查Python API是否响应
         let client = reqwest::Client::new();
@@ -138,6 +141,7 @@ impl PythonEngine {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_base_url(&self) -> &str {
         &self.base_url
     }

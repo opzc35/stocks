@@ -3,10 +3,12 @@
 use sqlx::SqlitePool;
 use anyhow::Result;
 
+#[allow(dead_code)]
 pub struct Database {
     pool: Option<SqlitePool>,
 }
 
+#[allow(dead_code)]
 impl Database {
     pub fn new() -> Self {
         Self { pool: None }
