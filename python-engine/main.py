@@ -4,6 +4,13 @@ from api.routes import market, backtest, ai, data, indicators, openai_compat
 from core.data.database import get_database, close_database
 from contextlib import asynccontextmanager
 
+# 导入多市场和新闻模块
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent))
+from multi_market import router as multi_market_router
+from global_news import router as global_news_router
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 启动时初始化数据库
@@ -32,6 +39,10 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(data.router, prefix="/api/data", tags=["data"])
 app.include_router(indicators.router, prefix="/api/indicators", tags=["indicators"])
 app.include_router(openai_compat.router, tags=["openai-compat"])
+
+# 新增路由
+app.include_router(multi_market_router, tags=["multi-market"])
+app.include_router(global_news_router, tags=["news"])
 
 
 @app.get("/")

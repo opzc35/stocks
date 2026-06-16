@@ -1,0 +1,313 @@
+/* 市场选择器样式 */
+
+.market-selector {
+  position: relative;
+}
+
+.current-selection {
+  display: inline-block;
+}
+
+.current-symbol-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: var(--gray-900);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 150px;
+}
+
+.current-symbol-btn:hover {
+  background: var(--gray-800);
+  border-color: var(--border-hover);
+}
+
+.symbol-text {
+  flex: 1;
+  text-align: left;
+}
+
+.dropdown-arrow {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* 搜索面板 */
+.search-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 400px;
+  max-height: 600px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.search-panel-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* 市场标签 */
+.market-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.market-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.market-tab:hover {
+  background: var(--gray-900);
+  border-color: var(--border-hover);
+}
+
+.market-tab.active {
+  background: var(--gray-900);
+  border-color: var(--accent);
+}
+
+.market-icon {
+  font-size: 1.25rem;
+}
+
+.market-name {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+.market-tab.active .market-name {
+  color: var(--foreground);
+}
+
+/* 搜索框 */
+.search-input-wrapper {
+  position: relative;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border);
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.625rem 2.5rem 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  background: var(--gray-900);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+  border-color: var(--accent);
+}
+
+.search-loading {
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+/* 搜索结果 */
+.search-results {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.results-header {
+  padding: 0.75rem var(--spacing-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.result-item {
+  width: 100%;
+  padding: 0.75rem var(--spacing-md);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.result-item:hover {
+  background: var(--gray-900);
+}
+
+.result-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.result-symbol {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground);
+  font-family: var(--font-mono);
+}
+
+.result-name {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+}
+
+.result-meta {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+/* 常用交易对 */
+.popular-symbols {
+  padding: var(--spacing-md);
+}
+
+.popular-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.popular-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.popular-item {
+  padding: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  background: var(--gray-900);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.popular-item:hover {
+  background: var(--gray-800);
+  border-color: var(--accent);
+}
+
+/* 自定义输入 */
+.custom-input-section {
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border);
+  background: var(--gray-950);
+}
+
+.custom-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.custom-input-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.custom-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.custom-input:focus {
+  border-color: var(--accent);
+}
+
+.custom-hint {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .search-panel {
+    width: 100vw;
+    max-width: calc(100vw - 2rem);
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .market-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .popular-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
