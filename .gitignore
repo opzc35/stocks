@@ -24,3 +24,5 @@ data/*.sqlite
 # OS
 .DS_Store
 Thumbs.db
+python-engine/data/stocks.db
+python-engine/bot_webhook.pid

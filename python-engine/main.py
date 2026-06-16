@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import market, backtest, ai, data, indicators, openai_compat
+from api.routes import market, backtest, ai, data, indicators, openai_compat, bot
 from core.data.database import get_database, close_database
 from contextlib import asynccontextmanager
 
@@ -39,6 +39,7 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(data.router, prefix="/api/data", tags=["data"])
 app.include_router(indicators.router, prefix="/api/indicators", tags=["indicators"])
 app.include_router(openai_compat.router, tags=["openai-compat"])
+app.include_router(bot.router, prefix="/api", tags=["bot"])
 
 # 新增路由
 app.include_router(multi_market_router, tags=["multi-market"])
