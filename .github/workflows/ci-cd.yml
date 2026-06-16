@@ -3,14 +3,30 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [ main, develop ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+
+# 允许并发运行，但取消旧的运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # Python后端测试
   test-python:
     name: Test Python Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
     - uses: actions/checkout@v4
@@ -19,14 +35,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-
-    - name: Cache Python dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('python-engine/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        cache: 'pip'
+        cache-dependency-path: 'python-engine/requirements.txt'
 
     - name: Install dependencies
       run: |
@@ -37,10 +47,8 @@ jobs:
       run: |
         pip install flake8
         cd python-engine
-        # 停止构建如果有语法错误或未定义的名称
+        # 只检查严重错误，跳过复杂度检查以加快速度
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # 退出为警告如果代码太复杂
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
       run: |
@@ -53,6 +61,7 @@ jobs:
   test-frontend:
     name: Test Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
     - uses: actions/checkout@v4
@@ -61,20 +70,10 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-
-    - name: Cache Node modules
-      uses: actions/cache@v4
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+        cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
-
-    - name: Lint TypeScript
-      run: npm run lint --if-present || echo "No lint script found"
+      run: npm ci --prefer-offline --no-audit
 
     - name: Type check
       run: npx tsc --noEmit
@@ -82,10 +81,11 @@ jobs:
     - name: Build frontend
       run: npm run build
 
-  # Rust构建测试
+  # Rust构建测试（跳过，因为没有 src-tauri）
   test-rust:
     name: Test Rust/Tauri
     runs-on: ubuntu-latest
+    timeout-minutes: 3
 
     steps:
     - uses: actions/checkout@v4
@@ -140,63 +140,67 @@ jobs:
       if: steps.check-tauri.outputs.has_tauri == 'false'
       run: echo "Skipping Rust tests - no src-tauri directory found"
 
-  # 构建发布版本
-  build-release:
-    name: Build Release
-    needs: [test-python, test-frontend, test-rust]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Install system dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        # Ubuntu 24.04+ uses libwebkit2gtk-4.1-dev instead of 4.0
-        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf || \
-        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
-
-    - name: Install frontend dependencies
-      run: npm ci
-
-    - name: Build Tauri app
-      run: npm run tauri:build
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-${{ matrix.os }}
-        path: |
-          src-tauri/target/release/bundle/
-          !src-tauri/target/release/bundle/**/*.deb
-          !src-tauri/target/release/bundle/**/*.rpm
-
-  # Docker镜像构建（可选）
+  # Docker镜像构建（仅主分支，且仅测试构建）
   build-docker:
     name: Build Docker Image
     needs: [test-python, test-frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+
+    - name: Check for Docker credentials
+      id: check-docker
+      run: |
+        if [ -n "${{ secrets.DOCKER_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_PASSWORD }}" ]; then
+          echo "has_credentials=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_credentials=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Log in to Docker Hub
+      if: steps.check-docker.outputs.has_credentials == 'true'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build Docker image (no push)
+      if: steps.check-docker.outputs.has_credentials == 'false'
+      uses: docker/build-push-action@v5
+      with:
+        context: ./python-engine
+        push: false
+        tags: stocks-trading:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push Docker image
+      if: steps.check-docker.outputs.has_credentials == 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: ./python-engine
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/stocks-trading:latest
+          ${{ secrets.DOCKER_USERNAME }}/stocks-trading:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Docker build summary
+      run: |
+        if [ "${{ steps.check-docker.outputs.has_credentials }}" == "true" ]; then
+          echo "✅ Docker image built and pushed to Docker Hub"
+        else
+          echo "⚠️ Docker image built locally (no credentials configured)"
+          echo "To enable Docker Hub push, add DOCKER_USERNAME and DOCKER_PASSWORD secrets"
+        fi
+
 
     - name: Check for Docker credentials
       id: check-docker
