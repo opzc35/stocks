@@ -1,0 +1,25 @@
+# Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+pydantic==2.9.0
+
+# Exchange APIs
+ccxt>=4.3.0
+
+# Data Analysis
+pandas>=2.2.0
+numpy>=2.2.6
+pandas-ta>=0.4.67b0
+
+# Database
+aiosqlite==0.20.0
+
+# AI Integration
+anthropic==0.39.0
+
+# Async
+aiohttp==3.10.0
+websockets==13.1
+
+# Utilities
+python-dotenv==1.0.1

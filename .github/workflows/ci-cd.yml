@@ -1,0 +1,195 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Python后端测试
+  test-python:
+    name: Test Python Backend
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Cache Python dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('python-engine/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        cd python-engine
+        pip install -r requirements.txt
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        cd python-engine
+        # 停止构建如果有语法错误或未定义的名称
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # 退出为警告如果代码太复杂
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Test with pytest
+      run: |
+        pip install pytest pytest-asyncio
+        cd python-engine
+        # 如果有测试文件就运行
+        if [ -d "tests" ]; then pytest; fi
+
+  # 前端构建测试
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Cache Node modules
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Lint TypeScript
+      run: npm run lint --if-present || echo "No lint script found"
+
+    - name: Type check
+      run: npx tsc --noEmit
+
+    - name: Build frontend
+      run: npm run build
+
+  # Rust构建测试
+  test-rust:
+    name: Test Rust/Tauri
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache Rust dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          src-tauri/target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+    - name: Check Rust code
+      run: |
+        cd src-tauri
+        cargo check
+        cargo clippy -- -D warnings || echo "Clippy warnings found"
+
+    - name: Run Rust tests
+      run: |
+        cd src-tauri
+        cargo test
+
+  # 构建发布版本
+  build-release:
+    name: Build Release
+    needs: [test-python, test-frontend, test-rust]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+    - name: Install frontend dependencies
+      run: npm ci
+
+    - name: Build Tauri app
+      run: npm run tauri:build
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-${{ matrix.os }}
+        path: |
+          src-tauri/target/release/bundle/
+          !src-tauri/target/release/bundle/**/*.deb
+          !src-tauri/target/release/bundle/**/*.rpm
+
+  # Docker镜像构建（可选）
+  build-docker:
+    name: Build Docker Image
+    needs: [test-python, test-frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      if: github.event_name == 'push'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./python-engine
+        push: ${{ github.event_name == 'push' }}
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/stocks-trading:latest
+          ${{ secrets.DOCKER_USERNAME }}/stocks-trading:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

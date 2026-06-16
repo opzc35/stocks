@@ -1,0 +1,26 @@
+node_modules
+.claude
+src-tauri/target
+python-engine/venv
+
+# Build outputs
+dist
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database
+data/*.db
+data/*.sqlite
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db

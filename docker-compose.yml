@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Python后端服务
+  backend:
+    build:
+      context: ./python-engine
+      dockerfile: Dockerfile
+    container_name: stocks-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATABASE_PATH=/app/data/stocks.db
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 前端服务（可选，用于生产环境）
+  frontend:
+    image: node:20-alpine
+    container_name: stocks-frontend
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  data:
+    driver: local
