@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   create-release:
@@ -32,13 +33,71 @@ jobs:
         draft: false
         prerelease: false
 
-  build-tauri:
-    name: Build Tauri App
+  # Web 应用构建（推荐方式）
+  build-web:
+    name: Build Web Application
     needs: create-release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci --prefer-offline
+
+    - name: Build frontend
+      run: npm run build
+
+    - name: Create distribution archive
+      run: |
+        cd dist
+        tar -czf ../stocks-web-${{ needs.create-release.outputs.version }}.tar.gz *
+        cd ..
+        zip -r stocks-web-${{ needs.create-release.outputs.version }}.zip dist/*
+
+    - name: Upload Web tar.gz to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./stocks-web-${{ needs.create-release.outputs.version }}.tar.gz
+        asset_name: stocks-web-${{ needs.create-release.outputs.version }}.tar.gz
+        asset_content_type: application/gzip
+
+    - name: Upload Web zip to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: ./stocks-web-${{ needs.create-release.outputs.version }}.zip
+        asset_name: stocks-web-${{ needs.create-release.outputs.version }}.zip
+        asset_content_type: application/zip
+
+  # Tauri 桌面应用构建（可选，需要 src-tauri 目录）
+  build-tauri:
+    name: Build Tauri App (${{ matrix.platform }})
+    needs: create-release
+    # 检查是否存在 src-tauri 目录
+    if: hashFiles('src-tauri/Cargo.toml') != ''
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-latest, windows-latest]
+        include:
+          - platform: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+          - platform: macos-latest
+            rust_target: x86_64-apple-darwin
+          - platform: windows-latest
+            rust_target: x86_64-pc-windows-msvc
 
     runs-on: ${{ matrix.platform }}
 
@@ -50,34 +109,47 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'npm'
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.rust_target }}
+
+    - name: Rust cache
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: src-tauri
 
     - name: Install dependencies (Ubuntu)
       if: matrix.platform == 'ubuntu-latest'
       run: |
         sudo apt-get update
+        # Ubuntu 24.04+ uses libwebkit2gtk-4.1-dev
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf || \
         sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
 
     - name: Install frontend dependencies
-      run: npm ci
+      run: npm ci --prefer-offline
 
-    - name: Build Tauri
+    - name: Build Tauri app
       uses: tauri-apps/tauri-action@v0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tagName: v__VERSION__
-        releaseName: 'Stocks Trading Client v__VERSION__'
-        releaseBody: 'See the assets to download this version and install.'
+        tagName: ${{ github.ref_name }}
+        releaseName: 'Stocks Trading v${{ needs.create-release.outputs.version }}'
+        releaseBody: 'Download the appropriate file for your platform'
         releaseDraft: false
         prerelease: false
 
+  # Docker 镜像发布
   publish-docker:
     name: Publish Docker Image
     needs: create-release
     runs-on: ubuntu-latest
+    # 只在配置了 Docker 凭证时运行
+    if: vars.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != ''
 
     steps:
     - name: Checkout code
@@ -94,7 +166,7 @@ jobs:
 
     - name: Extract version
       id: version
-      run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      run: echo "version=${{ needs.create-release.outputs.version }}" >> $GITHUB_OUTPUT
 
     - name: Build and push
       uses: docker/build-push-action@v5
