@@ -83,11 +83,27 @@ jobs:
         asset_content_type: application/zip
 
   # Tauri 桌面应用构建（可选，需要 src-tauri 目录）
+  check-tauri:
+    name: Check Tauri Availability
+    needs: create-release
+    runs-on: ubuntu-latest
+    outputs:
+      has_tauri: ${{ steps.check.outputs.has_tauri }}
+    steps:
+    - uses: actions/checkout@v4
+    - id: check
+      run: |
+        if [ -f "src-tauri/Cargo.toml" ]; then
+          echo "has_tauri=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_tauri=false" >> $GITHUB_OUTPUT
+        fi
+
   build-tauri:
     name: Build Tauri App (${{ matrix.platform }})
-    needs: create-release
-    # 检查是否存在 src-tauri 目录
-    if: hashFiles('src-tauri/Cargo.toml') != ''
+    needs: [create-release, check-tauri]
+    # 只在存在 src-tauri 时运行
+    if: needs.check-tauri.outputs.has_tauri == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -144,12 +160,27 @@ jobs:
         prerelease: false
 
   # Docker 镜像发布
-  publish-docker:
-    name: Publish Docker Image
+  check-docker:
+    name: Check Docker Credentials
     needs: create-release
     runs-on: ubuntu-latest
+    outputs:
+      has_credentials: ${{ steps.check.outputs.has_credentials }}
+    steps:
+    - id: check
+      run: |
+        if [ -n "${{ secrets.DOCKER_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_PASSWORD }}" ]; then
+          echo "has_credentials=true" >> $GITHUB_OUTPUT
+        else
+          echo "has_credentials=false" >> $GITHUB_OUTPUT
+        fi
+
+  publish-docker:
+    name: Publish Docker Image
+    needs: [create-release, check-docker]
     # 只在配置了 Docker 凭证时运行
-    if: vars.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != ''
+    if: needs.check-docker.outputs.has_credentials == 'true'
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
