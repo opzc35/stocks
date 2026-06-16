@@ -13,16 +13,144 @@ export interface PriceAlert {
   message?: string
 }
 
+export interface BotConfig {
+  id: string
+  platform: 'telegram' | 'discord' | 'slack' | 'wechat'
+  name: string
+  enabled: boolean
+  config: {
+    botToken?: string
+    chatId?: string
+    webhookUrl?: string
+    channelId?: string
+    apiKey?: string
+  }
+}
+
 interface AlertPanelProps {
   symbol: string
   currentPrice: number
   onAlertTriggered?: (alert: PriceAlert) => void
+  botConfigs?: BotConfig[]
 }
 
-export function AlertPanel({ symbol, currentPrice, onAlertTriggered }: AlertPanelProps) {
+export function AlertPanel({ symbol, currentPrice, onAlertTriggered, botConfigs = [] }: AlertPanelProps) {
   const [alerts, setAlerts] = useState<PriceAlert[]>([])
   const [targetPrice, setTargetPrice] = useState('')
   const [condition, setCondition] = useState<'above' | 'below'>('above')
+
+  // 发送到机器人
+  const sendToBots = async (alert: PriceAlert) => {
+    const enabledBots = botConfigs.filter(bot => bot.enabled)
+
+    if (enabledBots.length === 0) return
+
+    const message = formatAlertMessage(alert)
+
+    for (const bot of enabledBots) {
+      try {
+        await sendBotNotification(bot, message, alert)
+      } catch (error) {
+        console.error(`Failed to send to ${bot.platform}:`, error)
+      }
+    }
+  }
+
+  // 格式化预警消息
+  const formatAlertMessage = (alert: PriceAlert) => {
+    const emoji = alert.condition === 'above' ? '🚀' : '⚠️'
+    const action = alert.condition === 'above' ? '突破' : '跌破'
+
+    return `${emoji} 价格预警触发！
+
+交易对: ${alert.symbol}
+类型: ${action}
+目标价格: $${alert.targetPrice.toFixed(2)}
+当前价格: $${alert.currentPrice?.toFixed(2)}
+时间: ${new Date(alert.triggeredAt || Date.now()).toLocaleString('zh-CN')}
+
+${alert.message || ''}`
+  }
+
+  // 发送机器人通知
+  const sendBotNotification = async (bot: BotConfig, message: string, alert: PriceAlert) => {
+    switch (bot.platform) {
+      case 'telegram':
+        return sendTelegramMessage(bot, message)
+      case 'discord':
+        return sendDiscordMessage(bot, message, alert)
+      case 'slack':
+        return sendSlackMessage(bot, message, alert)
+      case 'wechat':
+        return sendWechatMessage(bot, message)
+    }
+  }
+
+  // Telegram 通知
+  const sendTelegramMessage = async (bot: BotConfig, message: string) => {
+    const url = `https://api.telegram.org/bot${bot.config.botToken}/sendMessage`
+
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: bot.config.chatId,
+        text: message,
+        parse_mode: 'HTML'
+      })
+    })
+  }
+
+  // Discord 通知
+  const sendDiscordMessage = async (bot: BotConfig, message: string, alert: PriceAlert) => {
+    const color = alert.condition === 'above' ? 0x10b981 : 0xf59e0b
+
+    await fetch(bot.config.webhookUrl!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        embeds: [{
+          title: '🔔 价格预警触发',
+          description: message,
+          color: color,
+          timestamp: new Date().toISOString()
+        }]
+      })
+    })
+  }
+
+  // Slack 通知
+  const sendSlackMessage = async (bot: BotConfig, message: string, alert: PriceAlert) => {
+    const color = alert.condition === 'above' ? '#10b981' : '#f59e0b'
+
+    await fetch(bot.config.webhookUrl!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: '🔔 价格预警触发',
+        attachments: [{
+          color: color,
+          text: message,
+          footer: '量化交易系统',
+          ts: Math.floor(Date.now() / 1000)
+        }]
+      })
+    })
+  }
+
+  // 企业微信通知
+  const sendWechatMessage = async (bot: BotConfig, message: string) => {
+    await fetch(bot.config.webhookUrl!, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        msgtype: 'text',
+        text: {
+          content: message
+        }
+      })
+    })
+  }
 
   // 检查预警触发
   useEffect(() => {
@@ -46,6 +174,9 @@ export function AlertPanel({ symbol, currentPrice, onAlertTriggered }: AlertPane
 
         // 通知父组件
         onAlertTriggered?.(triggeredAlert)
+
+        // 发送到机器人
+        sendToBots(triggeredAlert)
 
         // 播放提示音（如果浏览器支持）
         try {

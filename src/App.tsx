@@ -3,7 +3,8 @@ import './App.css'
 import { PriceChart } from './components/PriceChart'
 import { StrategyEditor } from './components/StrategyEditor'
 import { NewsPanel, type NewsItem } from './components/NewsPanel'
-import { AlertPanel, AlertNotification, type PriceAlert } from './components/AlertPanel'
+import { AlertPanel, AlertNotification, type PriceAlert, type BotConfig } from './components/AlertPanel'
+import { BotSettings } from './components/BotSettings'
 
 interface Ticker {
   symbol: string
@@ -37,6 +38,8 @@ function App() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [selectedNewsId, setSelectedNewsId] = useState<string | undefined>()
   const [triggeredAlert, setTriggeredAlert] = useState<PriceAlert | null>(null)
+  const [botConfigs, setBotConfigs] = useState<BotConfig[]>([])
+  const [showBotSettings, setShowBotSettings] = useState(false)
 
   // 获取实时价格
   const fetchTicker = async () => {
@@ -252,11 +255,30 @@ function App() {
     fetchIndicators()
     fetchChartData()
     fetchNews()
+    loadBotConfigs()
 
     // 每10秒更新一次价格
     const interval = setInterval(fetchTicker, 10000)
     return () => clearInterval(interval)
   }, [symbol])
+
+  // 加载机器人配置
+  const loadBotConfigs = () => {
+    const saved = localStorage.getItem('botConfigs')
+    if (saved) {
+      try {
+        setBotConfigs(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to load bot configs:', e)
+      }
+    }
+  }
+
+  // 保存机器人配置
+  const saveBotConfigs = (configs: BotConfig[]) => {
+    setBotConfigs(configs)
+    localStorage.setItem('botConfigs', JSON.stringify(configs))
+  }
 
   return (
     <div className="app">
@@ -275,6 +297,12 @@ function App() {
               onClick={() => setActiveTab('editor')}
             >
               📝 策略编辑器
+            </button>
+            <button
+              className="tab-btn"
+              onClick={() => setShowBotSettings(true)}
+            >
+              🤖 机器人
             </button>
           </div>
           {activeTab === 'dashboard' && (
@@ -402,6 +430,7 @@ function App() {
               symbol={symbol}
               currentPrice={ticker?.price || 0}
               onAlertTriggered={handleAlertTriggered}
+              botConfigs={botConfigs}
             />
           </section>
           <section className="card news-card">
@@ -432,6 +461,23 @@ function App() {
           onDismiss={dismissAlert}
           onView={viewAlertDetails}
         />
+      )}
+
+      {/* 机器人设置模态框 */}
+      {showBotSettings && (
+        <div className="modal-overlay" onClick={() => setShowBotSettings(false)}>
+          <div className="modal-content bot-settings-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🤖 机器人通知设置</h2>
+              <button className="btn-close-modal" onClick={() => setShowBotSettings(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body-wrapper">
+              <BotSettings onSave={saveBotConfigs} />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -480,3 +480,99 @@ body {
 .card {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* 机器人设置模态框 */
+.bot-settings-modal {
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+}
+
+.modal-body-wrapper {
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+}
+
+.modal-body-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body-wrapper::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.modal-body-wrapper::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+.modal-body-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s;
+}
+
+.modal-content {
+  background: #1e293b;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #334155;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #f1f5f9;
+  font-size: 20px;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.btn-close-modal:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
