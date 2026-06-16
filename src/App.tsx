@@ -481,25 +481,26 @@ function App() {
         </div>
       )}
 
-      {/* AI 助手模态框 */}
-      {showAIAssistant && (
-        <div className="modal-overlay" onClick={() => setShowAIAssistant(false)}>
-          <div className="glass-card" style={{ maxWidth: '700px', width: '90%', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-            <div className="card-header" style={{ flexShrink: 0 }}>
-              <h2 className="card-title">AI Trading Assistant</h2>
-              <button className="btn btn-ghost btn-icon" onClick={() => setShowAIAssistant(false)}>
-                ×
-              </button>
-            </div>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <AIAssistant
-                symbol={symbol}
-                currentPrice={ticker?.price || 0}
-                onExecuteAction={handleAIAction}
-              />
-            </div>
-          </div>
+      {/* AI 助手侧边栏 */}
+      <div className={`ai-sidebar ${showAIAssistant ? 'open' : ''}`}>
+        <div className="ai-sidebar-header">
+          <h2 className="ai-sidebar-title">AI Trading Assistant</h2>
+          <button className="btn btn-ghost btn-icon" onClick={() => setShowAIAssistant(false)}>
+            ×
+          </button>
         </div>
+        <div className="ai-sidebar-content">
+          <AIAssistant
+            symbol={symbol}
+            currentPrice={ticker?.price || 0}
+            onExecuteAction={handleAIAction}
+          />
+        </div>
+      </div>
+
+      {/* AI 侧边栏遮罩 */}
+      {showAIAssistant && (
+        <div className="sidebar-overlay" onClick={() => setShowAIAssistant(false)} />
       )}
     </div>
   )
