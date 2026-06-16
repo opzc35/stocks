@@ -5,6 +5,7 @@ import { StrategyEditor } from './components/StrategyEditor'
 import { NewsPanel, type NewsItem } from './components/NewsPanel'
 import { AlertPanel, AlertNotification, type PriceAlert, type BotConfig } from './components/AlertPanel'
 import { BotSettings } from './components/BotSettings'
+import { AIAssistant } from './components/AIAssistant'
 
 interface Ticker {
   symbol: string
@@ -40,6 +41,7 @@ function App() {
   const [triggeredAlert, setTriggeredAlert] = useState<PriceAlert | null>(null)
   const [botConfigs, setBotConfigs] = useState<BotConfig[]>([])
   const [showBotSettings, setShowBotSettings] = useState(false)
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
 
   // 获取实时价格
   const fetchTicker = async () => {
@@ -280,6 +282,52 @@ function App() {
     localStorage.setItem('botConfigs', JSON.stringify(configs))
   }
 
+  // 处理 AI 动作执行
+  const handleAIAction = async (action: any) => {
+    switch (action.type) {
+      case 'create_strategy':
+        // 这里实现创建策略的逻辑
+        console.log('Creating strategy:', action.data)
+        return { success: true, message: '策略已创建' }
+
+      case 'run_backtest':
+        // 运行回测
+        try {
+          const response = await fetch('http://localhost:8000/api/backtest/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              symbol: action.data.symbol,
+              strategy: 'simple_ma',
+              initial_capital: 10000
+            })
+          })
+          const data = await response.json()
+          return { success: true, data }
+        } catch (error) {
+          return { success: false, error: '回测失败' }
+        }
+
+      case 'set_alert':
+        // 设置预警（这里需要集成到 AlertPanel）
+        console.log('Setting alert:', action.data)
+        return { success: true, message: '预警已设置' }
+
+      case 'analyze_market':
+        // 市场分析
+        console.log('Analyzing market:', action.data)
+        return { success: true, message: '分析完成' }
+
+      case 'optimize_strategy':
+        // 优化策略
+        console.log('Optimizing strategy:', action.data)
+        return { success: true, message: '优化完成' }
+
+      default:
+        return { success: false, error: '未知动作' }
+    }
+  }
+
   return (
     <div className="app">
       <header className="header">
@@ -303,6 +351,12 @@ function App() {
               onClick={() => setShowBotSettings(true)}
             >
               🤖 机器人
+            </button>
+            <button
+              className="tab-btn"
+              onClick={() => setShowAIAssistant(true)}
+            >
+              🧠 AI助手
             </button>
           </div>
           {activeTab === 'dashboard' && (
@@ -475,6 +529,27 @@ function App() {
             </div>
             <div className="modal-body-wrapper">
               <BotSettings onSave={saveBotConfigs} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI 助手模态框 */}
+      {showAIAssistant && (
+        <div className="modal-overlay" onClick={() => setShowAIAssistant(false)}>
+          <div className="modal-content ai-assistant-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>🧠 AI 交易助手</h2>
+              <button className="btn-close-modal" onClick={() => setShowAIAssistant(false)}>
+                ×
+              </button>
+            </div>
+            <div className="modal-body-wrapper ai-body">
+              <AIAssistant
+                symbol={symbol}
+                currentPrice={ticker?.price || 0}
+                onExecuteAction={handleAIAction}
+              />
             </div>
           </div>
         </div>

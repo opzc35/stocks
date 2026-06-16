@@ -488,6 +488,26 @@ body {
   max-height: 85vh;
 }
 
+/* AI 助手模态框 */
+.ai-assistant-modal {
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-assistant-modal .modal-header {
+  flex-shrink: 0;
+}
+
+.ai-assistant-modal .modal-body-wrapper.ai-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+}
+
 .modal-body-wrapper {
   max-height: calc(85vh - 120px);
   overflow-y: auto;
