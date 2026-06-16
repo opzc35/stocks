@@ -3,6 +3,7 @@ import './App.css'
 import { PriceChart } from './components/PriceChart'
 import { StrategyEditor } from './components/StrategyEditor'
 import { NewsPanel, type NewsItem } from './components/NewsPanel'
+import { AlertPanel, AlertNotification, type PriceAlert } from './components/AlertPanel'
 
 interface Ticker {
   symbol: string
@@ -35,6 +36,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'editor'>('dashboard')
   const [news, setNews] = useState<NewsItem[]>([])
   const [selectedNewsId, setSelectedNewsId] = useState<string | undefined>()
+  const [triggeredAlert, setTriggeredAlert] = useState<PriceAlert | null>(null)
 
   // 获取实时价格
   const fetchTicker = async () => {
@@ -121,6 +123,27 @@ function App() {
   // 处理新闻点击
   const handleNewsClick = (newsItem: NewsItem) => {
     setSelectedNewsId(newsItem.id === selectedNewsId ? undefined : newsItem.id)
+  }
+
+  // 处理预警触发
+  const handleAlertTriggered = (alert: PriceAlert) => {
+    setTriggeredAlert(alert)
+
+    // 5秒后自动消失
+    setTimeout(() => {
+      setTriggeredAlert(null)
+    }, 10000)
+  }
+
+  // 关闭预警通知
+  const dismissAlert = () => {
+    setTriggeredAlert(null)
+  }
+
+  // 查看预警详情
+  const viewAlertDetails = () => {
+    setTriggeredAlert(null)
+    // 可以滚动到预警面板或高亮预警项
   }
 
   // 获取图表数据
@@ -372,8 +395,15 @@ function App() {
           </section>
         </div>
 
-        {/* 右侧：新闻面板 */}
-        <aside className="news-column">
+        {/* 右侧：新闻和预警面板 */}
+        <aside className="side-column">
+          <section className="card alert-card">
+            <AlertPanel
+              symbol={symbol}
+              currentPrice={ticker?.price || 0}
+              onAlertTriggered={handleAlertTriggered}
+            />
+          </section>
           <section className="card news-card">
             <NewsPanel
               news={news}
@@ -394,6 +424,15 @@ function App() {
       <footer className="footer">
         <p>量化交易系统 v0.1.0 | Powered by Claude Code</p>
       </footer>
+
+      {/* 预警通知弹窗 */}
+      {triggeredAlert && (
+        <AlertNotification
+          alert={triggeredAlert}
+          onDismiss={dismissAlert}
+          onView={viewAlertDetails}
+        />
+      )}
     </div>
   )
 }
