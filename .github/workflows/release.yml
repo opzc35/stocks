@@ -6,6 +6,11 @@ on:
       - 'v*.*.*'
   workflow_dispatch:  # 允许手动触发
 
+# 添加必要的权限
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   create-release:
     name: Create Release
@@ -24,14 +29,15 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ steps.get_version.outputs.version }}
         draft: false
         prerelease: false
+        generate_release_notes: true
 
   # Web 应用构建（推荐方式）
   build-web:
@@ -62,25 +68,15 @@ jobs:
         cd ..
         zip -r stocks-web-${{ needs.create-release.outputs.version }}.zip dist/*
 
-    - name: Upload Web tar.gz to Release
-      uses: actions/upload-release-asset@v1
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./stocks-web-${{ needs.create-release.outputs.version }}.tar.gz
-        asset_name: stocks-web-${{ needs.create-release.outputs.version }}.tar.gz
-        asset_content_type: application/gzip
-
-    - name: Upload Web zip to Release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: ./stocks-web-${{ needs.create-release.outputs.version }}.zip
-        asset_name: stocks-web-${{ needs.create-release.outputs.version }}.zip
-        asset_content_type: application/zip
+        tag_name: ${{ github.ref_name }}
+        files: |
+          stocks-web-${{ needs.create-release.outputs.version }}.tar.gz
+          stocks-web-${{ needs.create-release.outputs.version }}.zip
 
   # Tauri 桌面应用构建（可选，需要 src-tauri 目录）
   check-tauri:
