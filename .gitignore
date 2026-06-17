@@ -26,3 +26,4 @@ data/*.sqlite
 Thumbs.db
 python-engine/data/stocks.db
 python-engine/bot_webhook.pid
+test_bot_api.py

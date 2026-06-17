@@ -96,8 +96,7 @@ async def test_telegram_bot(bot: BotConfig) -> BotTestResponse:
                     f"https://api.telegram.org/bot{bot_token}/sendMessage",
                     json={
                         "chat_id": chat_id,
-                        "text": test_message,
-                        "parse_mode": "Markdown"
+                        "text": test_message
                     }
                 )
 

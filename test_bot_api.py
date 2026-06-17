@@ -34,9 +34,15 @@ def test_bot_api():
     )
 
     print(f"   状态码: {response.status_code}")
-    result = response.json()
-    print(f"   成功: {result['success']}")
-    print(f"   消息: {result['message']}")
+    try:
+        result = response.json()
+        print(f"   完整响应: {json.dumps(result, ensure_ascii=False, indent=2)}")
+        print(f"   成功: {result.get('success', 'N/A')}")
+        if 'message' in result:
+            print(f"   消息: {result['message']}")
+    except Exception as e:
+        print(f"   响应解析失败: {e}")
+        print(f"   原始响应: {response.text}")
     print()
 
     # 测试案例 2: Discord Webhook (无效)
@@ -57,9 +63,15 @@ def test_bot_api():
     )
 
     print(f"   状态码: {response.status_code}")
-    result = response.json()
-    print(f"   成功: {result['success']}")
-    print(f"   消息: {result['message']}")
+    try:
+        result = response.json()
+        print(f"   完整响应: {json.dumps(result, ensure_ascii=False, indent=2)}")
+        print(f"   成功: {result.get('success', 'N/A')}")
+        if 'message' in result:
+            print(f"   消息: {result['message']}")
+    except Exception as e:
+        print(f"   响应解析失败: {e}")
+        print(f"   原始响应: {response.text}")
     print()
 
     # 测试案例 3: 缺少必填字段
@@ -80,9 +92,15 @@ def test_bot_api():
     )
 
     print(f"   状态码: {response.status_code}")
-    result = response.json()
-    print(f"   成功: {result['success']}")
-    print(f"   消息: {result['message']}")
+    try:
+        result = response.json()
+        print(f"   完整响应: {json.dumps(result, ensure_ascii=False, indent=2)}")
+        print(f"   成功: {result.get('success', 'N/A')}")
+        if 'message' in result:
+            print(f"   消息: {result['message']}")
+    except Exception as e:
+        print(f"   响应解析失败: {e}")
+        print(f"   原始响应: {response.text}")
     print()
 
     print("=" * 60)
